@@ -137,8 +137,16 @@ class JsonSnitchServer
         };
 
         return $request->then(function ($response) {
-            if (!$response['result'])
+            if (!$response['result']){
+                echo '--------Response Failed------' . PHP_EOL;
+                echo 'Response Code: ' . json_encode(@$response['code'] ?? null);
+                echo 'Response Body: ' . json_encode(@$response['body'] ?? null);
+                echo 'Error Message: ' . json_encode(@$response['error'] ?? null);
+                echo '----------------------' . PHP_EOL;
+
                 return new Response(504, @$response['headers'] ?? [], @$response['body'] ?? '');
+            }
+                
 
             return new Response($response['code'], $response['headers'], $response['body']);
         });
