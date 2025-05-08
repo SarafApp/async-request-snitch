@@ -16,6 +16,7 @@
     "require": {
         "react/event-loop": ">=1",
         "react/http": ">=1",
-        "saraf/async-request": "dev-main"
+        "saraf/async-request": "dev-main",
+        "vlucas/phpdotenv": "^5.6"
     }
 }

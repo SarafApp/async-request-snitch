@@ -31,11 +31,21 @@ class JsonSnitchServer
     ];
 
     protected AsyncRequestJson $api;
+    protected string $token;
+    protected bool $isProtected = false;
 
-    public function __construct()
+    public function __construct(
+        ?string $username = null,
+        ?string $password = null
+    )
     {
         $this->api = new AsyncRequestJson();
         $this->api->setResponseHandler(HandlerEnum::Basic);
+
+        if ($username != null && $password != null) {
+            $this->token = base64_encode($username . ':' . $password);
+            $this->isProtected = true;
+        }
     }
 
     public function start(string $host, string|int $port): void
@@ -58,6 +68,15 @@ class JsonSnitchServer
     {
         $method = $request->getMethod();
         $headers = $request->getHeaders();
+
+        if ($this->isProtected) {
+            if (!isset($headers['Authorization']) || !$this->isAuth($headers['Authorization'][0])) {
+                return new Response(401, ['Content-Type' => 'application/json'], json_encode([
+                    'result' => false,
+                    'error' => 'Unauthorized: Basic Authentication required'
+                ]));
+            }
+        }
 
         if (!isset($headers['X-Proxy-To']))
             return new Response(451, ['Content-Type' => 'application/json'], json_encode([
@@ -109,6 +128,28 @@ class JsonSnitchServer
         }
     }
 
+    private function isAuth(string $authHeader): bool
+    {
+        // Check if protection is enabled or not
+        // if user don't provide username or password we don't even try to check the Basic auth and every request is valid
+        if (!$this->isProtected) {
+            return true;
+        }
+
+        $explodedAuthHeader = explode(" ", $authHeader);
+        if (count($explodedAuthHeader) != 2) {
+            return false;
+        }
+
+        $providedToken = $explodedAuthHeader[1];
+
+        if ($providedToken != $this->token) {
+            return false;
+        }
+
+        return true;
+    }
+
     /**
      * @throws \Exception
      */
@@ -130,7 +171,7 @@ class JsonSnitchServer
         };
 
         return $request->then(function ($response) {
-            if (!$response['result']){
+            if (!$response['result']) {
                 echo '--------Response Failed------' . PHP_EOL;
                 echo 'Response Code: ' . json_encode(@$response['code'] ?? null);
                 echo 'Response Body: ' . json_encode(@$response['body'] ?? null);
@@ -139,7 +180,7 @@ class JsonSnitchServer
 
                 return new Response(504, @$response['headers'] ?? [], @$response['body'] ?? '');
             }
-                
+
 
             return new Response($response['code'], $response['headers'], $response['body']);
         });
