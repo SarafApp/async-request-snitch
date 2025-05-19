@@ -1,0 +1,14 @@
+.idea
+.vscode
+
+.env
+.env.example
+
+.git
+.gitignore
+
+LICENSE
+
+*.md
+
+client.php

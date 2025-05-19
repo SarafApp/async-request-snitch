@@ -32,8 +32,19 @@ class JsonSnitchServer
 
     protected AsyncRequestJson $api;
 
-    public function __construct()
+    protected string $token;
+    protected bool $isProtected = false;
+
+    public function __construct(
+        ?string $username = null,
+        ?string $password = null,
+    )
     {
+        if ($username != null && $password != null) {
+            $this->token = base64_encode($username . ':' . $password);
+            $this->isProtected = true;
+        }
+
         $this->api = new AsyncRequestJson();
         $this->api->setResponseHandler(HandlerEnum::Basic);
     }
@@ -58,6 +69,15 @@ class JsonSnitchServer
     {
         $method = $request->getMethod();
         $headers = $request->getHeaders();
+
+        if ($this->isProtected) {
+            if (!isset($headers['Authorization']) || !$this->isAuth($headers['Authorization'][0])) {
+                return new Response(401, ['Content-Type' => 'application/json'], json_encode([
+                    'result' => false,
+                    'error' => 'Unauthorized: Basic Authentication required'
+                ]));
+            }
+        }
 
         if (!isset($headers['X-Proxy-To']))
             return new Response(451, ['Content-Type' => 'application/json'], json_encode([
@@ -154,5 +174,21 @@ class JsonSnitchServer
         }
 
         return $cleanedHeaders;
+    }
+
+    private function isAuth(string $authHeader): bool
+    {
+        $explodedAuthHeader = explode(" ", $authHeader);
+        if (count($explodedAuthHeader) != 2) {
+            return false;
+        }
+
+        $providedToken = $explodedAuthHeader[1];
+
+        if ($providedToken != $this->token) {
+            return false;
+        }
+
+        return true;
     }
 }
