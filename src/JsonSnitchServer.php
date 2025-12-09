@@ -27,7 +27,8 @@ class JsonSnitchServer
         'X-Forwarded-Proto',
         'X-Real-Ip',
         'X-Forwarded-Server',
-        'X-Trace-Id'
+        'X-Trace-Id',
+        'X-Proxy-Debug'
     ];
 
     protected AsyncRequestJson $api;
@@ -65,6 +66,10 @@ class JsonSnitchServer
                 'error' => 'X-Proxy-To header is required'
             ]));
 
+        $debug = false;
+        if (isset($headers['X-Proxy-Debug']) && $headers['X-Proxy-Debug'] == 1)
+            $debug = true;
+
         $body = @$request->getBody()->getContents();
         if (
             isset($headers['Content-Type']) &&
@@ -92,6 +97,7 @@ class JsonSnitchServer
         }
 
         $headers = $this->cleanHeaders($headers);
+        if ($debug) var_dump($headers);
 
         try {
             return $this->executeAPICall(
@@ -130,7 +136,7 @@ class JsonSnitchServer
         };
 
         return $request->then(function ($response) {
-            if (!$response['result']){
+            if (!$response['result']) {
                 echo '--------Response Failed------' . PHP_EOL;
                 echo 'Response Code: ' . json_encode(@$response['code'] ?? null);
                 echo 'Response Body: ' . json_encode(@$response['body'] ?? null);
@@ -139,7 +145,7 @@ class JsonSnitchServer
 
                 return new Response(504, @$response['headers'] ?? [], @$response['body'] ?? '');
             }
-                
+
 
             return new Response($response['code'], $response['headers'], $response['body']);
         });
