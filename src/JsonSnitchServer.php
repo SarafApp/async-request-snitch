@@ -25,6 +25,7 @@ class JsonSnitchServer
         'X-Forwarded-Host',
         'X-Forwarded-Port',
         'X-Forwarded-Proto',
+        'X-Forwarded-For',
         'X-Real-Ip',
         'X-Forwarded-Server',
         'X-Trace-Id',
