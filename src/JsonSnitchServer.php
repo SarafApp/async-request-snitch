@@ -67,7 +67,7 @@ class JsonSnitchServer
             ]));
 
         $debug = false;
-        if (isset($headers['X-Proxy-Debug']) && $headers['X-Proxy-Debug'] == 1)
+        if (isset($headers['X-Proxy-Debug']))
             $debug = true;
 
         $body = @$request->getBody()->getContents();
