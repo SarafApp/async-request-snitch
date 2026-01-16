@@ -4,6 +4,7 @@ WORKDIR /app/
 ADD . /app
 
 RUN composer install
+RUN mv .env.server .env
 
 EXPOSE 9898
 
