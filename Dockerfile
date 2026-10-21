@@ -1,4 +1,4 @@
-FROM sarafapp/php:8.3-cli
+FROM sarafapp/php:8.3.36-cli
 
 WORKDIR /app/
 ADD . /app
